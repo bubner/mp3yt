@@ -16,12 +16,16 @@
             <h3>YouTube MP3 Downloader</h3>
             <br />
             <div class="mb-3">
-                <input class="form-control mx-auto w-auto" id="link" name="link" placeholder="Link" type="text" />
+                <input class="form-control mx-auto w-25" id="link" name="link" placeholder="Link" type="text" />
             </div>
-            {% if error %}
-            <div class="help-block text-danger bold">{{ error }}</div>
-            <br>
-            {% endif %}
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="help-block text-danger bold">{{ message }}</div>
+                        <br>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
             <button class="btn btn-primary" type="submit">Download</button>
         </form>
     </body>
