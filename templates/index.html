@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -26,7 +26,14 @@
                     {% endfor %}
                 {% endif %}
             {% endwith %}
-            <button class="btn btn-primary" type="submit">Download</button>
+            <button class="btn btn-primary" type="submit" id="download">Download</button>
         </form>
+        <script>
+            document.querySelector("form").addEventListener("submit", () => {
+                setTimeout(() => {
+                    document.getElementById("link").value = "";
+                }, 1000);
+            });
+        </script>
     </body>
 </html>

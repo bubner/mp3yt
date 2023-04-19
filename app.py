@@ -24,7 +24,7 @@ def index():
             try:
                 yt = yt.streams.get_lowest_resolution()
                 yt.download(output_path="./.temp", filename=strip(yt.title))
-            except Exception as e:
+            except:
                 raise Exception("Failed to download video. Please try again.")
 
             # Write file into memory
