@@ -1,3 +1,4 @@
+<!-- Lucas Bubner, 2023 -->
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
     <head>
@@ -10,20 +11,19 @@
             crossorigin="anonymous"
         />
         <title>mp3yt</title>
-        <meta name="description" content="Lightweight and simple YouTube video to MP3 downloader.">
+        <meta name="description" content="Lightweight and simple YouTube video to MP3 downloader." />
     </head>
     <body>
-        <form action="/" method="post" class="text-center py-5">
+        <form action="/" method="post" class="text-center py-5 container d-flex justify-content-center align-items-center flex-column vh-100">
             <h3>YouTube MP3 Downloader</h3>
             <br />
             <div class="mb-3">
-                <input class="form-control mx-auto w-25" id="link" name="link" placeholder="Link" type="text" />
+                <input class="form-control mx-auto w-auto" id="link" name="link" placeholder="Link" type="text" />
             </div>
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
                     {% for message in messages %}
-                        <div class="help-block text-danger bold">{{ message }}</div>
-                        <br>
+                        <div class="help-block text-danger bold">{{ message }}</div> <br />
                     {% endfor %}
                 {% endif %}
             {% endwith %}

@@ -16,7 +16,7 @@ def index():
         try:
             link = request.form["link"]
             try:
-                yt = YouTube(link, on_complete_callback=lambda _,path: convert(path))
+                yt = YouTube(link, on_complete_callback=lambda _, path: convert(path))
             except:
                 raise Exception("Invalid or unsupported link.")
 
@@ -36,7 +36,11 @@ def index():
             remove(f"./.temp/{strip(yt.title)}.mp3")
 
             # Send file to user
-            return send_file(data, as_attachment=True, mimetype="audio/mp3", download_name=f"{strip(yt.title)}.mp3")
+            return send_file(data,
+                             as_attachment=True,
+                             mimetype="audio/mp3",
+                             download_name=f"{strip(yt.title)}.mp3")
+
         except Exception as e:
             flash(str(e))
             return redirect("/")
@@ -57,6 +61,7 @@ def strip(dodgy):
     dodgy = dodgy[:75]
     # Remove characters that are not allowed in file names
     return "".join(i for i in dodgy if i not in r'\/:*?"<>|#')
+
 
 if __name__ == "__main__":
     app.secret_key = environ["SECRET_KEY"]
