@@ -23,20 +23,20 @@ def index():
             # Download video file
             try:
                 yt = yt.streams.get_lowest_resolution()
-                yt.download(output_path="./.temp")
-            except:
+                yt.download(output_path="./.temp", filename=strip(yt.title))
+            except Exception as e:
                 raise Exception("Failed to download video. Please try again.")
 
             # Write file into memory
             data = BytesIO()
-            with open(f"./.temp/{yt.title}.mp3", "rb") as f:
+            with open(f"./.temp/{strip(yt.title)}.mp3", "rb") as f:
                 data.write(f.read())
             data.seek(0)
             # Remove file as it is no longer needed and is in memory
-            remove(f"./.temp/{yt.title}.mp3")
+            remove(f"./.temp/{strip(yt.title)}.mp3")
 
             # Send file to user
-            return send_file(data, as_attachment=True, mimetype="audio/mp3", download_name=f"{yt.title}.mp3")
+            return send_file(data, as_attachment=True, mimetype="audio/mp3", download_name=f"{strip(yt.title)}.mp3")
         except Exception as e:
             flash(str(e))
             return redirect("/")
@@ -47,10 +47,16 @@ def index():
 def convert(path):
     # Convert all downloaded mp4 files to mp3
     with VideoFileClip(path) as video:
-        video.audio.write_audiofile(path[:-4] + ".mp3")
+        video.audio.write_audiofile(path + ".mp3")
     # Delete mp4 file
     remove(path)
 
+
+def strip(dodgy):
+    # Limit to 75 characters
+    dodgy = dodgy[:75]
+    # Remove characters that are not allowed in file names
+    return "".join(i for i in dodgy if i not in r'\/:*?"<>|#')
 
 if __name__ == "__main__":
     app.secret_key = environ["SECRET_KEY"]
