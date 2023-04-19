@@ -1,6 +1,6 @@
 # Lucas Bubner, 2023
 from flask import Flask, render_template, request, redirect, flash, send_file
-from pytube import YouTube, Playlist
+from pytube import YouTube
 from os import environ, remove
 from waitress import serve
 from io import BytesIO
@@ -18,19 +18,14 @@ def index():
             try:
                 yt = YouTube(link, on_complete_callback=lambda _,path: convert(path))
             except:
-                try:
-                    yt = Playlist(link)
-                except:
-                    raise Exception("Invalid link.")
-                else:
-                    raise Exception("Playlists are currently not supported.")
+                raise Exception("Invalid or unsupported link.")
 
             # Download video file
             try:
                 yt = yt.streams.get_lowest_resolution()
                 yt.download(output_path="./.temp")
             except:
-                raise Exception("Failed to download video.")
+                raise Exception("Failed to download video. Please try again.")
 
             # Write file into memory
             data = BytesIO()
