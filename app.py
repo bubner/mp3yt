@@ -20,10 +20,10 @@ def index():
             except:
                 try:
                     yt = Playlist(link)
-                    if yt is not None:
-                        raise Exception("Playlists are currently not supported.")
                 except:
                     raise Exception("Invalid link.")
+                else:
+                    raise Exception("Playlists are currently not supported.")
 
             # Download video file
             try:
