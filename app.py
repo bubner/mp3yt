@@ -6,6 +6,9 @@ from waitress import serve
 from io import BytesIO
 from moviepy.editor import VideoFileClip
 
+import logging
+logging.basicConfig(filename='logs.log', filemode='a', format='%(asctime)s :: %(levelname)s :: %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+
 app = Flask(__name__)
 
 
@@ -17,15 +20,17 @@ def index():
             link = request.form["link"]
             try:
                 yt = YouTube(link, on_complete_callback=lambda _, path: convert(path))
-            except:
+            except Exception as e:
+                logging.warning("%s", str(e))
                 raise Exception("Invalid or unsupported link.")
 
             # Download video file
             try:
                 yt = yt.streams.get_lowest_resolution()
                 yt.download(output_path="./.temp", filename=strip(yt.title))
-            except:
-                raise Exception("Failed to download video. Please try again.")
+            except Exception as e:
+                logging.error("%s", str(e))
+                raise Exception("Failed to download video. Please try again later.")
 
             # Write file into memory
             data = BytesIO()
@@ -34,7 +39,8 @@ def index():
             data.seek(0)
             # Remove file as it is no longer needed and is in memory
             remove(f"./.temp/{strip(yt.title)}.mp3")
-
+            logging.info("successful conversion")
+            
             # Send file to user
             return send_file(data,
                              as_attachment=True,
