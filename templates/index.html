@@ -26,6 +26,11 @@
             <div class="mb-3">
                 <input class="form-control mx-auto w-auto" id="link" name="link" placeholder="Link" type="text" />
             </div>
+            <select class="form-select mx-auto w-auto" aria-label="Download type" name="type">
+                <option value="mp3">mp3</option>
+                <option value="mp4">mp4</option>
+            </select>
+            <br />
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
                     {% for message in messages %}

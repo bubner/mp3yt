@@ -18,34 +18,38 @@ def index():
         # Parse link into pytube object
         try:
             link = request.form["link"]
+            type = request.form["type"]
             try:
-                yt = YouTube(link, on_complete_callback=lambda _, path: convert(path))
+                yt = YouTube(link, on_complete_callback=lambda _, path: convert(path, type))
             except Exception as e:
                 logging.warning("%s", str(e))
                 raise Exception("Invalid or unsupported link.")
 
+            if yt.age_restricted:
+                raise Exception("Cannot download age-restricted videos.")
+
             # Download video file
             try:
-                yt = yt.streams.get_lowest_resolution()
-                yt.download(output_path="/tmp/mp3yt/", filename=strip(yt.title))
+                yt = yt.streams.get_highest_resolution()
+                yt.download(output_path="/tmp/mp3yt/", filename=strip(yt.title) + ".mp4")
             except Exception as e:
                 logging.error("%s", str(e))
                 raise Exception("Failed to download video. Please try again later.")
-
+                
             # Write file into memory
             data = BytesIO()
-            with open(f"/tmp/mp3yt/{strip(yt.title)}.mp3", "rb") as f:
+            with open(f"/tmp/mp3yt/{strip(yt.title)}.{type}", "rb") as f:
                 data.write(f.read())
             data.seek(0)
             # Remove file as it is no longer needed and is in memory
-            remove(f"/tmp/mp3yt/{strip(yt.title)}.mp3")
+            remove(f"/tmp/mp3yt/{strip(yt.title)}.{type}")
             logging.info("successful conversion")
             
             # Send file to user
             return send_file(data,
                              as_attachment=True,
-                             mimetype="audio/mp3",
-                             download_name=f"{strip(yt.title)}.mp3")
+                             mimetype="audio/mp3" if type == "mp3" else "video/mp4",
+                             download_name=f"{strip(yt.title)}.{type}")
 
         except Exception as e:
             flash(str(e))
@@ -54,8 +58,10 @@ def index():
         return render_template("index.html")
 
 
-def convert(path):
-    # Convert all downloaded mp4 files to mp3
+def convert(path, type):
+    if type == "mp4":
+        return
+    # Convert all downloaded mp4 files to mp3 if required
     with VideoFileClip(path) as video:
         video.audio.write_audiofile(path + ".mp3")
     # Delete mp4 file
