@@ -27,18 +27,18 @@ def index():
             # Download video file
             try:
                 yt = yt.streams.get_lowest_resolution()
-                yt.download(output_path="./.temp", filename=strip(yt.title))
+                yt.download(output_path="/tmp/mp3yt/", filename=strip(yt.title))
             except Exception as e:
                 logging.error("%s", str(e))
                 raise Exception("Failed to download video. Please try again later.")
 
             # Write file into memory
             data = BytesIO()
-            with open(f"./.temp/{strip(yt.title)}.mp3", "rb") as f:
+            with open(f"/tmp/mp3yt/{strip(yt.title)}.mp3", "rb") as f:
                 data.write(f.read())
             data.seek(0)
             # Remove file as it is no longer needed and is in memory
-            remove(f"./.temp/{strip(yt.title)}.mp3")
+            remove(f"/tmp/mp3yt/{strip(yt.title)}.mp3")
             logging.info("successful conversion")
             
             # Send file to user
