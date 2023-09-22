@@ -11,41 +11,54 @@
             integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ"
             crossorigin="anonymous"
         />
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+            crossorigin="anonymous"
+        ></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/downloadjs/1.4.8/download.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
         <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}" />
         <title>mp3yt</title>
-        <meta name="description" content="Lightweight and simple YouTube video to MP3 downloader." />
+        <meta name="description" content="Lightweight and simple YouTube video downloader." />
     </head>
     <body>
         <form
             action="/"
             method="post"
-            class="text-center py-5 container d-flex justify-content-center align-items-center flex-column vh-100"
+            class="text-center py-5 container d-flex justify-content-center align-items-center flex-column vh-100 animate__animated animate__fadeIn"
         >
-            <h3>YouTube MP3 Downloader</h3>
+            <h3 class="animate__animated animate__fadeInDown">YouTube Video Downloader</h3>
+            <small class="text-muted">Version 2.0 (pronounced mp3-it)</small>
+            <noscript>
+                <small class="text-warning">JavaScript is disabled. Some functionality may be broken or unusuable.</small>
+            </noscript>
             <br />
-            <div class="mb-3">
-                <input class="form-control mx-auto w-auto" id="link" name="link" placeholder="Link" type="text" />
+            <div class="mb-3 d-inline">
+                <div class="input-group mb-3">
+                    <input class="form-control" id="link" name="link" placeholder="Link" type="text" required />
+                    <button
+                        class="btn btn-outline-success dropdown-toggle"
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                    >
+                        Download
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" id="dropdown">
+                        <li><p id="waiting" class="text-center m-2" style="display: none">Waiting...</p></li>
+                        <li><a class="dropdown-item" role="button" id="mp3">mp3</a></li>
+                        <li><a class="dropdown-item" role="button" id="mp4">mp4</a></li>
+                    </ul>
+                </div>
             </div>
-            <select class="form-select mx-auto w-auto" aria-label="Download type" name="type">
-                <option value="mp3">mp3</option>
-                <option value="mp4">mp4</option>
-            </select>
-            <br />
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="help-block text-danger bold">{{ message }}</div> <br />
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            <button class="btn btn-primary" type="submit" id="download">Download</button>
+            <div class="mb-3 border border-secondary rounded p-4" id="dyn">
+                <small class="text-muted" id="runtime"></small>
+                <h5 id="title">Ready</h5>
+                <div class="spinner-border" id="spinner" style="display: none"></div>
+                <p id="status">Insert a video link.</p>
+            </div>
         </form>
-        <script>
-            document.querySelector("form").addEventListener("submit", () => {
-                setTimeout(() => {
-                    document.getElementById("link").value = "";
-                }, 1000);
-            });
-        </script>
+        <script src="{{ url_for('static', filename='runner.js') }}"></script>
     </body>
 </html>

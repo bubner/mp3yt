@@ -1,81 +1,100 @@
 # Lucas Bubner, 2023
-from flask import Flask, render_template, request, redirect, flash, send_file
-from pytube import YouTube
-from os import environ, remove
-from waitress import serve
+from flask import Flask, render_template, make_response, request
+from enum import Enum
 from io import BytesIO
-from moviepy.editor import VideoFileClip
-
-import logging
-logging.basicConfig(filename='logs.log', filemode='a', format='%(asctime)s :: %(levelname)s :: %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+import subprocess
+import os
+import uuid
 
 app = Flask(__name__)
+app.secret_key = "secret"
 
+class Format(Enum):
+    MP4 = 1
+    MP3 = 2
 
-@app.route("/", methods=["GET", "POST"])
+class Downloader:
+    def __init__(self, url):
+        self.url = url
+    
+    def get_title(self):
+        command = ["yt-dlp", "--get-title", self.url]
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+
+        if process.returncode != 0:
+            return {"res": None, "stderr": stderr.decode("utf-8")}
+        
+        return {"res": stdout.decode("utf-8"), "stderr": stderr.decode("utf-8")}
+
+    def download(self, dtype: Format):
+        gen = str(uuid.uuid4())
+        out = os.path.join("/tmp", gen, "%(title)s.%(ext)s")
+
+        formats = ["-x", "--audio-format", "mp3"] if dtype == Format.MP3 else ["-S", "res,ext:mp4:m4a", "--recode", "mp4"]
+
+        command = [
+            "yt-dlp",
+            *formats,
+            "--break-on-reject",
+            "--match-filter",
+            "!is_live",
+            "-I",
+            "0",
+            "-o",
+            out,
+            self.url,
+        ]
+
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        _, stderr = process.communicate()
+
+        if process.returncode != 0:
+            if stderr.decode("utf-8") == "":
+                return {"res": None, "stderr": "Unsupported URL. mp3yt does not support downloading currently running livestreams, bulk playlists, or age-restricted videos."}
+            return {"res": None, "stderr": stderr.decode("utf-8")}
+        
+        with open(os.path.join("/tmp", gen, os.listdir(os.path.join("/tmp", gen))[0]), "rb") as f:
+            byte_stream = BytesIO(f.read())
+
+        return byte_stream
+    
+
+@app.route("/")
 def index():
-    if request.method == "POST":
-        # Parse link into pytube object
-        try:
-            link = request.form["link"]
-            type = request.form["type"]
-            try:
-                yt = YouTube(link, on_complete_callback=lambda _, path: convert(path, type))
-            except Exception as e:
-                logging.warning("%s", str(e))
-                raise Exception("Invalid or unsupported link.")
+    return render_template("index.html")
 
-            if yt.age_restricted:
-                raise Exception("Cannot download age-restricted videos.")
+@app.route("/title")
+def title():
+    url = request.args.get("url")
+    if not url:
+        return {"error": "No URL provided."}, 400
+    
+    downloader = Downloader(url)
 
-            # Download video file
-            try:
-                yt = yt.streams.get_highest_resolution()
-                yt.download(output_path="/tmp/mp3yt/", filename=strip(yt.title) + ".mp4")
-            except Exception as e:
-                logging.error("%s", str(e))
-                raise Exception("Failed to download video. Please try again later.")
-                
-            # Write file into memory
-            data = BytesIO()
-            with open(f"/tmp/mp3yt/{strip(yt.title)}.{type}", "rb") as f:
-                data.write(f.read())
-            data.seek(0)
-            # Remove file as it is no longer needed and is in memory
-            remove(f"/tmp/mp3yt/{strip(yt.title)}.{type}")
-            logging.info("successful conversion")
-            
-            # Send file to user
-            return send_file(data,
-                             as_attachment=True,
-                             mimetype="audio/mp3" if type == "mp3" else "video/mp4",
-                             download_name=f"{strip(yt.title)}.{type}")
-
-        except Exception as e:
-            flash(str(e))
-            return redirect("/")
-    else:
-        return render_template("index.html")
+    response = downloader.get_title()
+    return response, 200
 
 
-def convert(path, type):
-    if type == "mp4":
-        return
-    # Convert all downloaded mp4 files to mp3 if required
-    with VideoFileClip(path) as video:
-        video.audio.write_audiofile(path + ".mp3")
-    # Delete mp4 file
-    remove(path)
+@app.route("/d", methods=["GET", "POST"])
+def download():
+    url = request.args.get("url")
+    dtype = request.args.get("type")
+    if not url and not dtype:
+        data = request.json
+        url = data.get("url")
+        dtype = data.get("type")
 
+    if not url:
+        return {"error": "No URL provided."}, 400
+    
+    if not dtype:
+        return {"error": "No type provided."}, 400
+    
+    if dtype not in ["mp3", "mp4"]:
+        return {"error": "Invalid type."}, 400
 
-def strip(dodgy):
-    # Limit to 75 characters
-    dodgy = dodgy[:75]
-    # Remove characters that are not allowed in file names
-    return "".join(i for i in dodgy if i not in r'\/:*?"<>|#')
+    downloader = Downloader(url)
 
-
-if __name__ == "__main__":
-    app.secret_key = environ["SECRET_KEY"]
-    app.config["SESSION_TYPE"] = "filesystem"
-    serve(app, host="0.0.0.0")
+    response = downloader.download(Format.MP3 if dtype == "mp3" else Format.MP4)
+    return response, 200
