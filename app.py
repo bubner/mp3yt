@@ -7,7 +7,6 @@ import os
 import uuid
 
 app = Flask(__name__)
-app.secret_key = "secret"
 
 class Format(Enum):
     MP4 = 1
