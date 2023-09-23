@@ -1,5 +1,5 @@
 # Lucas Bubner, 2023
-from flask import Flask, render_template, make_response, request
+from flask import Flask, render_template, request
 from enum import Enum
 from io import BytesIO
 import subprocess
