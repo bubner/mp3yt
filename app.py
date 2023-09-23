@@ -17,7 +17,7 @@ class Downloader:
         self.url = url
     
     def get_title(self):
-        command = ["yt-dlp", "--get-title", self.url]
+        command = ["./yt-dlp", "--get-title", self.url]
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
 
@@ -33,7 +33,7 @@ class Downloader:
         formats = ["-x", "--audio-format", "mp3"] if dtype == Format.MP3 else ["-S", "res,ext:mp4:m4a", "--recode", "mp4"]
 
         command = [
-            "yt-dlp",
+            "./yt-dlp",
             *formats,
             "--break-on-reject",
             "--match-filter",
